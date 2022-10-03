@@ -22,8 +22,6 @@ def write_file():
     print('### output file generated successfully in : ' + file_path)
     with open(output_filename, 'w', encoding='utf-8') as f:
         json.dump(output_content, f, ensure_ascii=False, indent=4)
-    # json.dump(output_content)
-    # f.write()
     f.close()
 
 
