@@ -1,3 +1,5 @@
+import ipaddress
+
 ips = {}    # storing IPs as key and frequency of them as value in dictionary
 most_frequent_ip = []   # list of most frequent ips
 most_frequent_num = 1   # number of most frequent ips
@@ -7,6 +9,8 @@ least_frequent_num = 1000000    # number of the least frequent ips
 
 # TODO : for future should implement event class, any operation on source_ip,
 #  dest_ip , ... need to have proper obj of each log
+# for more performance just client_ip_address extracted, destination_ip ignored because most of them are
+# invalid ip format
 def operate_log(log):
     field_list = log.split()
     timestamp = field_list[0]
@@ -19,27 +23,23 @@ def operate_log(log):
     username = field_list[7]
     access_type__destination_ip = field_list[8]
     access_type = str(access_type__destination_ip).split('/')[0]
-    # some destination_ip is "-", in this situation we can use ipaddress library in python for check correct ip format
-    # , but I ignore this issue , because it decreases the performance , and it can be useful for analysis (null ip !)
     destination_ip = str(access_type__destination_ip).split('/')[1]
     response_type = field_list[9]
 
-    # Because nothing was said about the IP type in the assignment, here both the client IP and
-    # the destination IP were considered together. In the future, this processing should be
-    # done separately for the source and destination IPs for better analysis.
     # TODO : for future work need to use redis (for storing huge log and
     #  its performance in key value search and ...)
-    if client_ip_address not in ips:
-        ips.update({client_ip_address: 1})
-    else:
-        val = ips[client_ip_address]
-        ips.update({client_ip_address: val+1})
+    try:
+        ip = ipaddress.ip_address(client_ip_address)
+    except ValueError:
+        print('address/netmask is invalid: %s' % client_ip_address)
+    except:
+        print('Usage : %s  ip' % client_ip_address)
 
-    if destination_ip not in ips:
-        ips.update({destination_ip: 1})
+    if ip not in ips:
+        ips.update({ip: 1})
     else:
-        val = ips[destination_ip]
-        ips.update({destination_ip: val+1})
+        val = ips[ip]
+        ips.update({ip: val+1})
 
 
 def get_frequent_ips():
@@ -57,10 +57,20 @@ def get_frequent_ips():
     # for getting all ip with max repeat and min repeat
     for x in ips:
         if ips[x] == max_num:
-            most_frequent_ip.append(x)
+            most_frequent_ip.append(str(x))
         elif ips[x] == min_num:
-            least_frequent_ip.append(x)
+            least_frequent_ip.append(str(x))
     global most_frequent_num, least_frequent_num
     most_frequent_num = max_num
     least_frequent_num = min_num
 
+
+# manual check for ip correctness
+def validIP(address):
+    parts = address.split(".")
+    if len(parts) != 4:
+        return False
+    for item in parts:
+        if not 0 <= int(item) <= 255:
+            return False
+    return True
