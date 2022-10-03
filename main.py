@@ -1,9 +1,8 @@
 import os.path
 import input_log_files
-
-# start point of tool
 import output_txt
 
+# start point of tool
 if __name__ == '__main__':
     # get path of log files from user input
     path = input('Enter path of log files:\n')
